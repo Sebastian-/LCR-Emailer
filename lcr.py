@@ -60,7 +60,7 @@ def lcr():
     for folderName, subfolders, filenames in os.walk(targetDirectory):
         if folderName == targetDirectory or folderName == targetDirectory + "\\To Print":
             continue
-        studentInfo = lcrData[folderName.split(' - ')[1]]
+        studentInfo = lcrData[folderName.split(' --- ')[1]]
 
         msg, attachmentPath = assembleEmail(user, studentInfo, folderName, filenames)
 
@@ -198,7 +198,7 @@ def prepEmailFolders(studentData, templateEmailPath, targetDirectory):
         # create folder to hold the body of the email and its PDF attachment
         folderName = student['FirstName'].strip() + " " + \
                      student['LastName'].strip() +  " Level " + \
-                     student['Type'].strip() + " - " + str(s)
+                     student['Type'].strip() + " --- " + str(s)
         try:
             os.mkdir("." + '\\' + folderName)
         except OSError:
@@ -215,18 +215,14 @@ def prepEmailFolders(studentData, templateEmailPath, targetDirectory):
 
 def getRecipients(studentInfo):
     recipients = []
-##    if studentInfo['MotherEmail'] != '':
-##        recipients.append(studentInfo['MotherEmail'])
-##    if studentInfo['FatherEmail'] != '':
-##        recipients.append(studentInfo['FatherEmail'])
-##    if len(recipients) == 2:
-##        if recipients[0] == recipients[1]:
-##            return recipients[0]
-    if studentInfo['MotherEmail'] == '' and studentInfo['FatherEmail'] == '':
-        return ''
-    else:
-        return 'sebastian.murgu@gmail.com'
-##    return ", ".join(recipients)
+    if studentInfo['MotherEmail'] != '':
+        recipients.append(studentInfo['MotherEmail'])
+    if studentInfo['FatherEmail'] != '':
+        recipients.append(studentInfo['FatherEmail'])
+    if len(recipients) == 2:
+        if recipients[0] == recipients[1]:
+            return recipients[0]
+    return ", ".join(recipients)
     
 
 def emailLogin():
@@ -297,14 +293,3 @@ def assembleEmail(FROM, studentInfo, folderName, filenames):
     return [msg, attachment]
 
 lcr()
-
-
-
-    
-    
-    
-
-
-
-
-
