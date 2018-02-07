@@ -1,13 +1,19 @@
 #! python3
 # lcr.py - a script for the mailing and attachment of kumon lcr reports
 
-import os, xlrd, sys, smtplib, getpass, shutil
+import os
+import xlrd
+import sys
+import smtplib
+import getpass
+import shutil
 from string import Template
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 from email import encoders
+
 
 def lcr():
     baseDirectory = os.getcwd()
@@ -21,17 +27,20 @@ def lcr():
         try:
             os.chdir(targetDirectory)
         except OSError:
-            print("***ERROR: Invalid directory. Please try again.")
-            targetDirectory = input("Enter the filepath containing lcr spreadsheets: ")
+            print("Invalid directory. Please try again.")
+            targetDirectory = input(
+                "Enter the filepath containing lcr spreadsheets: ")
             continue
         break
 
     checkTarget(targetDirectory)
     checkSpreadsheets(targetDirectory)
 
-    # key is subject and test level (eg. 'Math 4A'), value is a dict {'totalMarks': , 'suggestedTime': }
+    """key is subject and test level (eg. 'Math 4A'),
+    value is a dict {'totalMarks': , 'suggestedTime': }"""
     testTotals = {}
-    # key is subject and row number, value is a dict with all keys in REQUIRED_COLUMNS and their respective values
+    """ key is subject and row number, value is a dict with all keys in
+    REQUIRED_COLUMNS and their respective values"""
     lcrData = {}
 
     loadWorksheet(testTotalsPath, 0, ['level'], testTotals)
@@ -41,14 +50,17 @@ def lcr():
 
     assignTestTotals(testTotals, lcrData)
 
-    # create a folder for each test taken to contain their respective email and pdf attachment
+    """create a folder for each test taken to contain their respective email
+    and pdf attachment"""
     prepEmailFolders(lcrData, templateEmailPath, targetDirectory)
 
-    # pdfs are imported by hand from CMS, then a check is done to ensure each folder has exactly one pdf
-    input("Please import all lcr PDFs into their respective folders. Press Enter when ready")
+    """pdfs are imported by hand from CMS, then a check is done to ensure
+    each folder has exactly one pdf"""
+    input("Please import all lcr PDFs into their respective folders. \
+        Press Enter when ready")
     checkPDFs(targetDirectory)
 
-    # prepare print folder
+    """prepare print folder"""
     try:
         os.mkdir(".\\To Print")
     except OSError:
@@ -89,10 +101,10 @@ def lcr():
     input("Press Enter to exit")
 
 
-# Ensure necessary columns are present in each spreadsheet        
+# Ensure necessary columns are present in each spreadsheet
 def checkSpreadsheets(targetDirectory):
-    REQUIRED_COLUMNS = ['FirstName', 'LastName', 'Subject', 'Type', 'Time', \
-                    'Score', 'FatherEmail', 'MotherEmail', 'Passing']
+    REQUIRED_COLUMNS = ['FirstName', 'LastName', 'Subject', 'Type', 'Time',
+                        'Score', 'FatherEmail', 'MotherEmail', 'Passing']
 
     print("Checking spreadsheets...")
     s = [x for x in os.listdir(".") if x.endswith(".xls")]
@@ -111,6 +123,7 @@ def checkSpreadsheets(targetDirectory):
             input("Press Enter to exit.")
             sys.exit()
 
+
 # Check that all lcr pdfs are reasonably sorted into folders
 def checkPDFs(targetDirectory):
     os.chdir(targetDirectory)
@@ -123,23 +136,26 @@ def checkPDFs(targetDirectory):
                 continue
             pdfs = len([file for file in os.listdir("." + "\\" + folder) if file.endswith(".pdf")])
             if folder == ".":
-                if pdfs == 0: continue
+                if pdfs == 0:
+                    continue
                 if pdfs > 0:
-                    input("*** ERROR: some pdfs have not been placed in a folder. " + \
-                          "Press Enter when ready.")
+                    input("*** ERROR: some pdfs have not been placed in a folder. "
+                          + "Press Enter when ready.")
                     pdfsSorted = False
                     break
             if pdfs == 0:
-                input("*** ERROR: no lcr report found in folder: " + folder + \
-                      " Press Enter when ready.")
+                input("*** ERROR: no lcr report found in folder: " + folder
+                      + " Press Enter when ready.")
                 pdfsSorted = False
                 break
             elif pdfs > 1:
-                input("*** ERROR: mulitple lcr reports found in folder: " + folder + \
-                      " Press Enter when ready.")
+                input("*** ERROR: mulitple lcr reports found in folder: " + folder
+                      + " Press Enter when ready.")
                 pdfsSorted = False
                 break
-        if pdfsSorted: break
+        if pdfsSorted:
+            break
+
 
 # Ensure target folder contains correct excel files
 def checkTarget(targetDirectory):
@@ -152,9 +168,10 @@ def checkTarget(targetDirectory):
         s = [x for x in os.listdir(".") if x.endswith(".xls")]
     for file in REQUIRED_SPREADSHEETS:
         while file not in s:
-            input("Missing excel file " + file + " Ensure two excel files with names " + \
-                  "'math' and 'reading' are present. Press Enter when ready.")
+            input("Missing excel file " + file + " Ensure two excel files with names "
+                  + "'math' and 'reading' are present. Press Enter when ready.")
             s = [x for x in os.listdir(".") if x.endswith(".xls")]
+
 
 # Loads the data of an excel worksheet into the dictionary 'data'
 # Key labels are strings containing the fields in desiredKeys[] in the order in which they are listed
@@ -181,6 +198,7 @@ def loadWorksheet(workbookPath, sheetIndex, desiredKeys, data, rowNumbers=False)
         else:
             data[" ".join(key).strip()] = value
 
+
 def assignTestTotals(totals, students):
     for s in students.keys():
         student = students[s]
@@ -188,17 +206,17 @@ def assignTestTotals(totals, students):
         for t in totals[totalsKey].keys():
             student[t] = totals[totalsKey][t]
 
+
 def prepEmailFolders(studentData, templateEmailPath, targetDirectory):
     INTEGER_COLUMNS = ['Time', 'suggestedTime', 'Score', 'totalMarks']
-    
     for s in studentData.keys():
         student = studentData[s]
         if student["Passing"] == "No":
             continue
         # create folder to hold the body of the email and its PDF attachment
         folderName = student['FirstName'].strip() + " " + \
-                     student['LastName'].strip() +  " Level " + \
-                     student['Type'].strip() + " --- " + str(s)
+            student['LastName'].strip() + " Level " + \
+            student['Type'].strip() + " --- " + str(s)
         try:
             os.mkdir("." + '\\' + folderName)
         except OSError:
@@ -213,6 +231,7 @@ def prepEmailFolders(studentData, templateEmailPath, targetDirectory):
         f.close()
         os.chdir(targetDirectory)
 
+
 def getRecipients(studentInfo):
     recipients = []
     if studentInfo['MotherEmail'] != '':
@@ -223,7 +242,7 @@ def getRecipients(studentInfo):
         if recipients[0] == recipients[1]:
             return recipients[0]
     return ", ".join(recipients)
-    
+
 
 def emailLogin():
     smtp = smtplib.SMTP('smtp.gmail.com', 587)
@@ -239,6 +258,7 @@ def emailLogin():
         break
     return [user, smtp]
 
+
 # returns a list of all data required to assemble an email [to, attachment, body, subject]
 # from the files of a folder
 def collectEmailData(studentInfo, filenames):
@@ -246,7 +266,7 @@ def collectEmailData(studentInfo, filenames):
     attachment = ''
     emailBody = ''
     subject = studentInfo['FirstName'] + "'s Level Completion Report"
-    
+
     for f in filenames:
         if f.endswith('.pdf'):
             newName = folderName + "\\" + studentInfo['LastName'] + ", " + studentInfo['FirstName'] + " - " + \
@@ -257,6 +277,7 @@ def collectEmailData(studentInfo, filenames):
             email = open(folderName + "\\" + f)
             emailBody = email.read()
             email.close()
+
 
 # assembles an email based on the files in folder
 def assembleEmail(FROM, studentInfo, folderName, filenames):
@@ -275,21 +296,22 @@ def assembleEmail(FROM, studentInfo, folderName, filenames):
             email = open(folderName + "\\" + f)
             emailBody = email.read()
             email.close()
-    
+
     msg = MIMEMultipart()
     msg['From'] = FROM
     msg['To'] = to
-    msg['Date'] = formatdate(localtime = True)
+    msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
 
     msg.attach(MIMEText(emailBody, 'html'))
 
     part = MIMEBase('application', "octet-stream")
-    part.set_payload(open(attachment,"rb").read())
+    part.set_payload(open(attachment, "rb").read())
     encoders.encode_base64(part)
     part.add_header('Content-Disposition', 'attachment; filename="{0}"'.format(os.path.basename(attachment)))
     msg.attach(part)
 
     return [msg, attachment]
+
 
 lcr()
