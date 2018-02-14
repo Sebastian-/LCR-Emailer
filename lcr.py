@@ -52,6 +52,10 @@ def lcr():
     template_email = os.path.join(cwd, "TemplateEmail.html")
     test_total_ss = os.path.join(cwd, "AchievementTestData.xls")
 
+    print("Please start by exporting end of level reports from CMS."
+          "\n* Include all columns when generating the spreadsheet."
+          "\n* Ensure that the corresponding spreadsheets are named math.xls"
+          " and reading.xls")
     working_directory = getLCRDirectory()
     math_ss = os.path.join(working_directory, "math.xls")
     reading_ss = os.path.join(working_directory, "reading.xls")
