@@ -359,8 +359,11 @@ def emailLogin():
     return [user, smtp]
 
 
-# assembles an email based on the files in folder
 def assembleEmail(FROM, student_info, folder, filenames):
+	"""
+	   Returns the message and attachment of an email based on the files in
+	   'folder'
+	"""
     to = getRecipients(student_info)
     attachment = ''
     emailBody = ''
