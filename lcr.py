@@ -122,12 +122,12 @@ def lcr():
         try:
             smtp.sendmail(user, msg['To'], msg.as_string())
         except smtplib.SMTPException:
+        	dest = print_folder + os.path.split(attachment)[1]
             # If an email cannot be sent, the report must be printed
             print("Failed to send email to " + msg['To'])
             print("LCR report for " + student_info['FirstName'] + " "
                   + student_info['LastName'] + " must be printed. "
                   + "It has been moved to " + dest)
-            dest = print_folder + os.path.split(attachment)[1]
             src = attachment
             shutil.copyfile(src, dest)
             continue
